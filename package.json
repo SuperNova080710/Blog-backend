@@ -8,7 +8,11 @@
     "build": "nest build",
     "start": "nest start",
     "dev": "nest start --watch",
-    "start:prod": "node dist/main"
+    "start:prod": "node dist/main",
+    "typeorm": "typeorm-ts-node-commonjs -d src/database/data-source.ts",
+    "migration:generate": "npm run typeorm -- migration:generate src/migrations/InitialSchema",
+    "migration:run": "npm run typeorm -- migration:run",
+    "migration:revert": "npm run typeorm -- migration:revert"
   },
   "repository": {
     "type": "git",
@@ -36,7 +40,8 @@
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.24",
-    "@types/node": "^26.2.0",
+    "@types/node": "^26.4.0",
+    "ts-node": "^10.9.2",
     "tsx": "^4.23.12",
     "typescript": "^6.0.3"
   }
