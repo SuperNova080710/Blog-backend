@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity("posts")
 export class PostEntity {
@@ -11,9 +11,9 @@ export class PostEntity {
     @Column({ type: "text" })
     content!: string;
 
-    @Column()
+    @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
     createdAt!: Date;
-
-    @Column()
+    
+    @UpdateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
     updatedAt!: Date;
 }
