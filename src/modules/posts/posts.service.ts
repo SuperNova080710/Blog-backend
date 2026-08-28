@@ -16,4 +16,26 @@ export class PostsService {
 
         return this.postRepository.save(post);
     }
+
+    async findAll(page: number, limit: number) {
+        const skip = (page -1) * limit;
+
+        const [posts, total] = await this.postRepository.findAndCount({
+            order: {
+                createdAt: "DESC",
+            },
+            skip,
+            take: limit,
+        });
+
+        return {
+            data: posts,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
+    }
 }
