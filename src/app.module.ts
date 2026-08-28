@@ -3,6 +3,7 @@ import { HealthCheckModule } from "./modules/health-check/health-check.module";
 import { ConfigModule, ConfigService} from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import * as Joi from 'joi';
+import { TestModule } from "./modules/test/test.module";
 
 @Module({
     imports: [ConfigModule.forRoot({
@@ -55,6 +56,7 @@ import * as Joi from 'joi';
         }),
 
         HealthCheckModule,
+        TestModule,
     ],
 })
 export class AppModule {}
