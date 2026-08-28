@@ -12,3 +12,5 @@ export class InitialSchema1787796721147 implements MigrationInterface {
     }
 
 }
+// npm run migration:revert 로 되돌려지는 것과
+// npm run migration:run으로 재실행 되는 것을 확인함
