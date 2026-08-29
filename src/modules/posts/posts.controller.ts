@@ -1,10 +1,12 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Patch, Post, Query, UseInterceptors } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { GetPostsDto } from './dto/get-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { ResponseInterceptor } from '../../common/interceptors/response.interceptor';
 
 @Controller('posts')
+@UseInterceptors(ResponseInterceptor)
 export class PostsController {
     constructor(private readonly postsService: PostsService) {}
 
@@ -32,11 +34,12 @@ export class PostsController {
     }
 
     @Delete(":id")
+    @HttpCode(HttpStatus.NO_CONTENT)
     async remove(@Param("id", ParseIntPipe) id: number) {
         await this.postsService.remove(id);
 
-        return {
-            message: "Post deleted successfully",
-        }
+        // return {
+        //     message: "Post deleted successfully",
+        // }
     }
 }
