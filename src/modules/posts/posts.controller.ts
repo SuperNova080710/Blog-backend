@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { GetPostsDto } from './dto/get-post.dto';
@@ -29,5 +29,14 @@ export class PostsController {
         @Body() updatePostDto: UpdatePostDto,
     ) {
         return this.postsService.update(id, updatePostDto);
+    }
+
+    @Delete(":id")
+    async remove(@Param("id", ParseIntPipe) id: number) {
+        await this.postsService.remove(id);
+
+        return {
+            message: "Post deleted successfully",
+        }
     }
 }
