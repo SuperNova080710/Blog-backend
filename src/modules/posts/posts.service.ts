@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PostEntity } from '../../entities/post.entity';
 import { Repository } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
 
 @Injectable()
 export class PostsService {
@@ -51,5 +52,13 @@ export class PostsService {
         }
 
         return post;
+    }
+
+    async update(id: number, updatePostDto: UpdatePostDto): Promise<PostEntity> {
+        const post = await this.findOne(id);
+
+        Object.assign(post, updatePostDto);
+
+        return this.postRepository.save(post);
     }
 }
