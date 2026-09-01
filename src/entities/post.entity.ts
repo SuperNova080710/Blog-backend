@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { UserEntity } from "./user.entity";
 
 @Entity("posts")
 export class PostEntity {
@@ -16,4 +17,10 @@ export class PostEntity {
     
     @UpdateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
     updatedAt!: Date;
+
+    @ManyToOne(() => UserEntity, (user) => user.posts, {
+        nullable: false,
+    })
+    @JoinColumn({ name: "authorId" })
+    author!: UserEntity;
 }

@@ -19,15 +19,20 @@ export class PostsService {
     }
 
     async findAll(page: number, limit: number) {
-        const skip = (page -1) * limit;
+        const queryBuilder = this.postRepository
+        .createQueryBuilder("post")
+        .leftJoinAndSelect("post.author", "author")
+        .addSelect([
+            "author.id",
+            "author.email",
+        ]);
 
-        const [posts, total] = await this.postRepository.findAndCount({
-            order: {
-                createdAt: "DESC",
-            },
-            skip,
-            take: limit,
-        });
+        queryBuilder
+        .orderBy("post.createdAt", "DESC")
+        .skip((page - 1) * limit)
+        .take(limit);
+
+        const [posts, total] = await queryBuilder.getManyAndCount();
 
         return {
             data: posts,
@@ -41,11 +46,15 @@ export class PostsService {
     }
 
     async findOne(id: number): Promise<PostEntity> {
-        const post = await this.postRepository.findOne({
-            where: {
-                id,
-            },
-        });
+        const post = await this.postRepository
+        .createQueryBuilder("post")
+        .leftJoinAndSelect("post.author", "author")
+        .addSelect([
+            "author.id",
+            "author.email",
+        ])
+        .where("post.id = :id", { id })
+        .getOne();
 
         if (!post) {
             throw new NotFoundException("Post not found");
