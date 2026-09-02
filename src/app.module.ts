@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService} from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import * as Joi from 'joi';
 import { TestModule } from "./modules/test/test.module";
+import { PostsModule } from './modules/posts/posts.module';
 
 @Module({
     imports: [ConfigModule.forRoot({
@@ -57,6 +58,7 @@ import { TestModule } from "./modules/test/test.module";
 
         HealthCheckModule,
         TestModule,
+        PostsModule,
     ],
 })
 export class AppModule {}
