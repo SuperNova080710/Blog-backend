@@ -1,7 +1,8 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import { ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
 import * as bcrypt from "bcrypt";
 import { UsersService } from "../users/users.service";
 import { SignupDto } from "./dto/signup.dto";
+import { LoginDto } from "./dto/login.dto";
 
 @Injectable()
 export class AuthService {
@@ -24,6 +25,34 @@ export class AuthService {
             email,
             hashedPassword,
         );
+
+        return {
+            id: user.id,
+            email: user.email,
+        };
+    }
+
+    async login(loginDto: LoginDto) {
+        const { email, password } = loginDto;
+
+        const user = await this.usersService.findByEmail(email);
+
+        if(!user) {
+            throw new UnauthorizedException(
+                "Email or Password is not correct.",
+            );
+        }
+
+        const isPasswordValid = await bcrypt.compare(
+            password,
+            user.password,
+        );
+
+        if(!isPasswordValid) {
+            throw new UnauthorizedException(
+                "Email or Password is not correct.",
+            );
+        }
 
         return {
             id: user.id,
