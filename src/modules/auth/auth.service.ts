@@ -3,11 +3,13 @@ import * as bcrypt from "bcrypt";
 import { UsersService } from "../users/users.service";
 import { SignupDto } from "./dto/signup.dto";
 import { LoginDto } from "./dto/login.dto";
+import { JwtService } from "@nestjs/jwt";
 
 @Injectable()
 export class AuthService {
     constructor(
         private readonly usersService: UsersService,
+        private readonly jwtService: JwtService,
     ) {}
 
     async signup(signupDto: SignupDto) {
@@ -54,9 +56,15 @@ export class AuthService {
             );
         }
 
-        return {
-            id: user.id,
+        const payload = {
+            sub: user.id,
             email: user.email,
+        };
+
+        const accessToken = await this.jwtService.signAsync(payload);
+
+        return {
+            accessToken,
         };
     }
 }

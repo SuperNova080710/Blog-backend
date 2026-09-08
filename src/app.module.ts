@@ -36,6 +36,9 @@ import { AuthMoule } from "./modules/auth/auth.module";
 
             DB_DATABASE: Joi.string()
             .required(),
+
+            JWT_SECRET: Joi.string()
+            .required(),
         })
 
         }), 
