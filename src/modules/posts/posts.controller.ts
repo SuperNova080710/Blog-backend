@@ -42,17 +42,30 @@ export class PostsController {
     }
 
     @Patch(":id")
+    @UseGuards(JwtAuthGuard)
     update(
         @Param("id", ParseIntPipe) id: number,
         @Body() updatePostDto: UpdatePostDto,
+        @Req() req: AuthenticatedRequest,
     ) {
-        return this.postsService.update(id, updatePostDto);
+        return this.postsService.update(
+            id, 
+            updatePostDto,
+            req.user.id,
+        );
     }
 
     @Delete(":id")
+    @UseGuards(JwtAuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
-    async remove(@Param("id", ParseIntPipe) id: number) {
-        await this.postsService.remove(id);
+    async remove(
+        @Param("id", ParseIntPipe) id: number,
+        @Req() req: AuthenticatedRequest,
+    ) {
+        await this.postsService.remove(
+            id,
+            req.user.id,
+        );
 
         // return {
         //     message: "Post deleted successfully",

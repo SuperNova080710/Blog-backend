@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PostEntity } from '../../entities/post.entity';
 import { Repository } from 'typeorm';
@@ -77,16 +77,31 @@ export class PostsService {
         return post;
     }
 
-    async update(id: number, updatePostDto: UpdatePostDto): Promise<PostEntity> {
+    async update(
+        id: number, 
+        updatePostDto: UpdatePostDto,
+        userId: number,
+    ): Promise<PostEntity> {
         const post = await this.findOne(id);
+
+        if(post.author.id !== userId){
+            throw new ForbiddenException("You have no rights for update this post.");
+        }
 
         Object.assign(post, updatePostDto);
 
         return this.postsRepository.save(post);
     }
 
-    async remove(id: number): Promise<void> {
+    async remove(
+        id: number,
+        userId: number,
+    ): Promise<void> {
         const post = await this.findOne(id);
+
+        if(post.author.id !== userId) {
+            throw new ForbiddenException("You have no rights for remove this post.");
+        }
 
         await this.postsRepository.remove(post);
     }
