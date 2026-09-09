@@ -4,22 +4,36 @@ import { PostEntity } from '../../entities/post.entity';
 import { Repository } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class PostsService {
     constructor(
         @InjectRepository(PostEntity)
-        private readonly postRepository: Repository<PostEntity>,
+        private readonly postsRepository: Repository<PostEntity>,
+        private readonly usersService: UsersService,
     ) {}
 
-    async create(createPostDto: CreatePostDto): Promise<PostEntity> {
-        const post = this.postRepository.create(createPostDto);
+    async create(
+        createPostDto: CreatePostDto,
+        userId: number,
+    ): Promise<PostEntity> {
+        const user = await this.usersService.findById(userId);
 
-        return this.postRepository.save(post);
+        if(!user) {
+            throw new NotFoundException("Can not find user.");
+        }
+
+        const post = this.postsRepository.create({
+            ...createPostDto,
+            author: user,
+        });
+
+        return this.postsRepository.save(post);
     }
 
     async findAll(page: number, limit: number) {
-        const queryBuilder = this.postRepository
+        const queryBuilder = this.postsRepository
         .createQueryBuilder("post")
         .leftJoinAndSelect("post.author", "author")
         .addSelect([
@@ -46,7 +60,7 @@ export class PostsService {
     }
 
     async findOne(id: number): Promise<PostEntity> {
-        const post = await this.postRepository
+        const post = await this.postsRepository
         .createQueryBuilder("post")
         .leftJoinAndSelect("post.author", "author")
         .addSelect([
@@ -68,12 +82,12 @@ export class PostsService {
 
         Object.assign(post, updatePostDto);
 
-        return this.postRepository.save(post);
+        return this.postsRepository.save(post);
     }
 
     async remove(id: number): Promise<void> {
         const post = await this.findOne(id);
 
-        await this.postRepository.remove(post);
+        await this.postsRepository.remove(post);
     }
 }

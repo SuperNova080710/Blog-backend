@@ -16,6 +16,12 @@ export class UsersService {
         });
     }
 
+    async findById(id: number): Promise<UserEntity | null> {
+        return this.userRepository.findOne({
+            where: { id },
+        });
+    }
+
     async create(email: string, password: string): Promise<UserEntity> {
         const user = this.userRepository.create({
             email,
