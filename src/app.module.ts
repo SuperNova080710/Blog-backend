@@ -5,6 +5,8 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import * as Joi from 'joi';
 import { TestModule } from "./modules/test/test.module";
 import { PostsModule } from './modules/posts/posts.module';
+import { UsersModule } from "./modules/users/users.module";
+import { AuthMoule } from "./modules/auth/auth.module";
 
 @Module({
     imports: [ConfigModule.forRoot({
@@ -34,6 +36,9 @@ import { PostsModule } from './modules/posts/posts.module';
 
             DB_DATABASE: Joi.string()
             .required(),
+
+            JWT_SECRET: Joi.string()
+            .required(),
         })
 
         }), 
@@ -59,6 +64,8 @@ import { PostsModule } from './modules/posts/posts.module';
         HealthCheckModule,
         TestModule,
         PostsModule,
+        UsersModule,
+        AuthMoule,
     ],
 })
 export class AppModule {}
