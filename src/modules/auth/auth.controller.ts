@@ -27,7 +27,6 @@ export class AuthController {
         return this.authService.login(loginDto);
     }
 
-    // temp api
     @Get("me")
     @UseGuards(JwtAuthGuard)
     getMe(@Req() req: AuthenticatedRequest) {
