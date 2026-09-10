@@ -34,4 +34,15 @@ export class RefreshTokensService {
             },
         });
     }
+
+    async revoke(
+        refreshTokenId: number,
+    ): Promise<void> {
+        await this.refreshTokenRepository.update(
+            refreshTokenId,
+            {
+                revokedAt: new Date(),
+            },
+        );
+    }
 }

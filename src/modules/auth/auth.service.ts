@@ -7,6 +7,7 @@ import { JwtService } from "@nestjs/jwt";
 import { RefreshTokensService } from "../refresh-tokens/refresh-tokens.service";
 import { ConfigService } from "@nestjs/config";
 import { sourceMapsEnabled } from "node:process";
+import { bytes } from "node:stream/consumers";
 
 function getExpirationDate(expiresIn: string): Date {
     const match = expiresIn.match(/^(\d+)([smhd])$/);
@@ -183,13 +184,51 @@ export class AuthService {
             );
         }
 
+        await this.refreshTokensService.revoke(
+            matchedToken.id,
+        );
+
         const accessToken = await this.jwtService.signAsync({
             sub: user.id,
             email: user.email,
         });
 
+        const refreshTokenPayload = {
+            sub: user.id,
+        };
+
+        const newRefreshToken = await this.jwtService.signAsync(
+            refreshTokenPayload,
+            {
+                secret: this.configService.get<string>(
+                    "JWT_REFRESH_SECRET",
+                )!,
+                expiresIn: this.configService.get<string>(
+                    "JWT_REFRESH_EXPIRES_IN",
+                )!,
+            },
+        );
+
+        const newRefreshTokenHash = await bcrypt.hash(
+            newRefreshToken,
+            10,
+        );
+
+        const refreshExpiresIn = this.configService.get<string>(
+            "JWT_REFRESH_EXPIRES_IN",
+        )!;
+
+        const refreshExpiresAt = getExpirationDate(refreshExpiresIn);
+
+        await this.refreshTokensService.create(
+            user.id,
+            newRefreshTokenHash,
+            refreshExpiresAt,
+        );
+
         return {
             accessToken,
+            refreshToken: newRefreshToken,
         };
     }
 }
