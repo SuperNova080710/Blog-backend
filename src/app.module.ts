@@ -7,6 +7,7 @@ import { TestModule } from "./modules/test/test.module";
 import { PostsModule } from './modules/posts/posts.module';
 import { UsersModule } from "./modules/users/users.module";
 import { AuthMoule } from "./modules/auth/auth.module";
+import { RefreshTokensModule } from "./modules/refresh-tokens/refresh-tokens.module";
 
 @Module({
     imports: [ConfigModule.forRoot({
@@ -78,6 +79,7 @@ import { AuthMoule } from "./modules/auth/auth.module";
         PostsModule,
         UsersModule,
         AuthMoule,
+        RefreshTokensModule,
     ],
 })
 export class AppModule {}
