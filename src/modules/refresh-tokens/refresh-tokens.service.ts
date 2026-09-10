@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
 import { RefreshTokenEntity } from "../../entities/refresh-token.entity";
-import { Repository } from "typeorm";
+import { IsNull, Repository } from "typeorm";
+import { InjectRepository } from "@nestjs/typeorm";
 
 @Injectable()
 export class RefreshTokensService {
@@ -22,5 +22,16 @@ export class RefreshTokensService {
         });
 
         return this.refreshTokenRepository.save(refreshToken);
+    }
+
+    async findActiveByUserId(
+        userId: number,
+    ): Promise<RefreshTokenEntity[]> {
+        return this.refreshTokenRepository.find({
+            where: {
+                userId,
+                revokedAt: IsNull(),
+            },
+        });
     }
 }
