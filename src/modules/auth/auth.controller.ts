@@ -42,4 +42,13 @@ export class AuthController {
     getMe(@Req() req: AuthenticatedRequest) {
         return req.user;
     }
+
+    @Post("logout")
+    async logout(
+        @Body() refreshTokenDto: RefreshTokenDto,
+    ) {
+        return this.authService.logout(
+            refreshTokenDto.refreshToken,
+        );
+    }
 }

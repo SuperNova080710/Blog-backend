@@ -231,4 +231,65 @@ export class AuthService {
             refreshToken: newRefreshToken,
         };
     }
+
+    async logout(refreshToken: string): Promise<void> {
+        let payload: { sub: number };
+
+        try {
+            payload = await this.jwtService.verifyAsync(
+                refreshToken,
+                {
+                    secret: this.configService.get<string>(
+                        "JWT_REFRESH_SECRET",
+                    )!,
+                },
+            );
+        } catch {
+            throw new UnauthorizedException(
+                "Refresh Token is not validated.",
+            );
+        }
+
+        const userId = payload.sub;
+
+        const user = await this.usersService.findById(userId);
+
+        if(!user) {
+            throw new UnauthorizedException(
+                "Can not find user.",
+            );
+        }
+
+        const refreshTokens = await this.refreshTokensService.findActiveByUserId(
+            userId,
+        );
+
+        const matchedToken = await Promise.all(
+            refreshTokens.map(async (storedToken) => {
+                const isMatch = await bcrypt.compare(
+                    refreshToken,
+                    storedToken.tokenHash,
+                );
+
+                return isMatch ? storedToken : null;
+            }),
+        ).then((tokens) =>
+            tokens.find(
+                (
+                    token,
+                ): token is (typeof refreshTokens)[number] =>
+                    token !== null,
+            ),
+        );
+
+        if (!matchedToken) {
+            throw new UnauthorizedException(
+                "Refresh Token is not validated.",
+            );
+        }
+
+        await this.refreshTokensService.revoke(
+            matchedToken.id,
+        );
+    }
 }
