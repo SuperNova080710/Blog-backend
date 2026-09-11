@@ -3,6 +3,7 @@ import { DataSource } from "typeorm";
 import { TestEntity } from "../entities/test.entity";
 import { PostEntity } from "../entities/post.entity";
 import { UserEntity } from "../entities/user.entity";
+import { RefreshTokenEntity } from "../entities/refresh-token.entity";
 
 export default new DataSource({
     type: "postgres",
@@ -12,6 +13,11 @@ export default new DataSource({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE,
 
-    entities: [TestEntity, PostEntity, UserEntity],
+    entities: [
+        TestEntity, 
+        PostEntity, 
+        UserEntity,
+        RefreshTokenEntity,
+    ],
     migrations: ["src/migrations/*.ts"],
 });
