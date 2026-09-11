@@ -14,10 +14,14 @@ export default new DataSource({
     database: process.env.DB_DATABASE,
 
     entities: [
-        TestEntity, 
-        PostEntity, 
+        TestEntity,
+        PostEntity,
         UserEntity,
         RefreshTokenEntity,
     ],
-    migrations: ["src/migrations/*.ts"],
+
+    migrations:
+        process.env.NODE_ENV === "production"
+            ? [__dirname + "/../migrations/*.js"]
+            : ["src/migrations/*.ts"],
 });
