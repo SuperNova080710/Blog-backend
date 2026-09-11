@@ -1,0 +1,68 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+
+    container_name: blog-app
+    restart: unless-stopped
+
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN}
+
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN}
+
+    ports:
+      - "${PORT}:3000"
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    networks:
+      - blog-network
+
+  db:
+    image: postgres:16
+    container_name: blog-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+
+    ports:
+      - "${DB_PORT}:5432"
+
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+    networks:
+      - blog-network
+
+networks:
+  blog-network:
+    driver: bridge
