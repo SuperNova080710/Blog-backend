@@ -23,8 +23,8 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN}
 
-    ports:
-      - "${PORT}:3000"
+    expose:
+      - "3000"
 
     depends_on:
       db:
@@ -43,9 +43,6 @@ services:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_DATABASE}
-
-    ports:
-      - "${DB_PORT}:5432"
 
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
