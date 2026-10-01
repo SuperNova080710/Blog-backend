@@ -10,6 +10,7 @@ async function bootstrap() {
 
     app.enableCors({
         origin: "http://localhost:3001",
+        Credentials: true,
     });
 
     app.useGlobalPipes(
