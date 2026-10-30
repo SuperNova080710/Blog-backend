@@ -1,0 +1,168 @@
+name: Backend CI and Container
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: NestJS build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Compile NestJS
+        run: npm run build
+
+  security:
+    name: Dependency security audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Audit all dependencies
+        if: success() || failure()
+        run: npm audit --audit-level=high
+
+  container-smoke:
+    name: Build and test backend with ephemeral PostgreSQL
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Build production image without publishing
+        run: docker build --tag blog-backend:ci .
+
+      - name: Start isolated PostgreSQL and smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          db_env="$(mktemp)"
+          app_env="$(mktemp)"
+          chmod 600 "$db_env" "$app_env"
+          trap 'docker logs blog-backend-ci || true; docker rm -f blog-backend-ci blog-db-ci >/dev/null 2>&1 || true; docker network rm blog-ci >/dev/null 2>&1 || true; rm -f "$db_env" "$app_env"' EXIT
+
+          db_password="$(openssl rand -hex 24)"
+          access_secret="$(openssl rand -hex 48)"
+          refresh_secret="$(openssl rand -hex 48)"
+
+          printf 'POSTGRES_USER=blog_ci\nPOSTGRES_PASSWORD=%s\nPOSTGRES_DB=blog_ci\n' "$db_password" > "$db_env"
+          printf 'NODE_ENV=production\nPORT=3000\nDB_HOST=blog-db-ci\nDB_PORT=5432\nDB_USERNAME=blog_ci\nDB_PASSWORD=%s\nDB_DATABASE=blog_ci\nJWT_ACCESS_SECRET=%s\nJWT_ACCESS_EXPIRES_IN=1h\nJWT_REFRESH_SECRET=%s\nJWT_REFRESH_EXPIRES_IN=7d\n' "$db_password" "$access_secret" "$refresh_secret" > "$app_env"
+
+          docker network create blog-ci
+          docker run --detach --name blog-db-ci --network blog-ci \
+            --env-file "$db_env" \
+            postgres:16
+
+          db_ready=false
+          for attempt in $(seq 1 40); do
+            if docker exec blog-db-ci pg_isready -U blog_ci -d blog_ci >/dev/null 2>&1; then
+              db_ready=true
+              break
+            fi
+            sleep 2
+          done
+          test "$db_ready" = true
+
+          docker run --detach --name blog-backend-ci --network blog-ci \
+            --publish 127.0.0.1:3101:3000 \
+            --env-file "$app_env" \
+            blog-backend:ci
+
+          app_ready=false
+          for attempt in $(seq 1 40); do
+            if curl -fsS -o /dev/null http://127.0.0.1:3101/health-check; then
+              app_ready=true
+              break
+            fi
+            sleep 2
+          done
+          test "$app_ready" = true
+          curl -fsS http://127.0.0.1:3101/health-check
+
+          # Ensure the NestJS process is running as an unprivileged user.
+          test "$(docker exec blog-backend-ci id -u)" != "0"
+
+          # No local credentials or database data in the built image.
+          docker exec blog-backend-ci sh -c 'test ! -e /app/.env && test ! -e /app/.env.local && test ! -d /app/docker/data'
+
+  publish-ghcr:
+    name: Publish reviewed main image to GHCR
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [quality, security, container-smoke]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Authenticate to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish commit-addressed image
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="ghcr.io/supernova080710/blog-backend:sha-${GITHUB_SHA}"
+          docker build \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --tag "$image" \
+            .
+          docker push "$image"
+          echo "Published image: \`$image\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "No Kubernetes deployment is performed. K3s activation remains blocked by SSH recovery and security approval." >> "$GITHUB_STEP_SUMMARY"
