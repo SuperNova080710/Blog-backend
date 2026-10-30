@@ -1,6 +1,6 @@
 # 백엔드 컨테이너·CI/CD 준비 및 검증 기록 (#23 / #30)
 
-> 2026-10-30 · 상태: 코드/워크플로 작성, **실제 GitHub Actions 및 GHCR 게시 결과 확인 전**
+> 2026-10-30 · 상태: CI 작성, **프로덕션 npm audit 7건(Critical 1)으로 첫 CI FAIL**. 보안 개선 후 재검증 필요; GHCR 미게시·K3s 미배포
 > 연계: [2차 네트워크 프로젝트 #23](https://github.com/SuperNova080710/2nd-project-docs/issues/23) · [#30](https://github.com/SuperNova080710/2nd-project-docs/issues/30)
 
 ## 1. 구성 개요
@@ -31,8 +31,8 @@
 
 | 이벤트 | 검사/행동 | 서버 영향 |
 | --- | --- | --- |
-| `main` 대상 PR 생성/갱신 | Node.js 24 `npm ci`, 프로덕션/전체 `npm audit --audit-level=high`, `npm run build`; Docker 빌드, 임시 PostgreSQL 및 `/health-check` 확인 | GitHub-hosted runner에 한정 |
-| `main` push | 위 검사에 성공하면 GHCR에 `ghcr.io/supernova080710/blog-backend:sha-<전체 커밋 SHA>` 게시 | 이미지 레지스트리에 게시, **K3s에는 배포하지 않음** |
+| `main` 대상 PR 생성/갱신 | Node.js 24 `npm ci`, `npm run build`; 독립 보안 Job의 프로덕션/전체 `npm audit --audit-level=high`; Docker 빌드, 임시 PostgreSQL 및 `/health-check` 확인 | GitHub-hosted runner에 한정 |
+| `main` push | 품질·독립 보안·컨테이너 검사 모두 성공하면 GHCR에 `ghcr.io/supernova080710/blog-backend:sha-<전체 커밋 SHA>` 게시 | 이미지 레지스트리에 게시, **K3s에는 배포하지 않음** |
 | 수동 `workflow_dispatch` | 품질 및 컨테이너 테스트 | GHCR 게시/K3s 배포 없음 |
 | 자동 K3s 배포 | **미구현** | SSH 복구 및 BoatingDuck 보안 승인 전 비활성 |
 
@@ -49,14 +49,15 @@
 - [x] 기존 Dockerfile의 비권한 실행 미설정·빌드/실행 단계·파일 복사 구조 점검
 - [x] `.dockerignore`의 `docker/data` 누락 및 환경값 제외 규칙 확인·보완
 - [x] CI 품질 검사·임시 PostgreSQL 스모크 및 `main` GHCR 게시 **코드 작성**
-- [ ] GitHub Actions `quality`, `container-smoke` **실제 PASS**
-- [ ] npm 고위험 취약점 0건 실측 (기존 잠금 파일의 감사 결과 아직 확인하지 않음)
+- [x] 첫 GitHub Actions 실행에서 프로덕션 감사 실패 확인: [Run 41024482260](https://github.com/SuperNova080710/Blog-backend/actions/runs/41024482260)
+- [ ] GitHub Actions `quality`, `security`, `container-smoke` **모두 실제 PASS**
+- [ ] 프로덕션 취약점 7건(Critical 1/High 5/Moderate 1) 해결 및 전체 감사 0건 확인 ([보안 이슈 #31](../issues/31))
 - [ ] 이미지 내부 의도치 않은 환경변수·비밀정보 여부 전수 검사
 - [ ] GHCR 실제 push 후 digest 및 접근권한 검증
 - [ ] 프로젝트 전용 DB 마이그레이션·인증/게시글 통합 검증
 - [ ] K3s/Flannel/UFW·Ingress/WAF 안전 승인 후 CD 연결
 
-**현재 판정:** CODE READY / CI EXECUTION PENDING / K3S DEPLOYMENT BLOCKED.
+**현재 판정:** CI SECURITY FAIL(원인 확인) / BACKEND BUILD & CONTAINER RE-TEST PENDING / GHCR PUBLISH BLOCKED / K3S DEPLOYMENT BLOCKED.
 
 ## 5. 운영 서버 보호
 
