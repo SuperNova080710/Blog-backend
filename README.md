@@ -14,7 +14,7 @@ NestJS와 PostgreSQL을 사용하여 회원가입, 로그인, 게시글 작성·
 
 | 구분 | 사용 기술 |
 | --- | --- |
-| 실행 환경 | Node.js 22, npm |
+| 실행 환경 | Node.js 24, npm (컨테이너/CI) |
 | 언어 | TypeScript 6 |
 | 서버 | NestJS 11, Express 5 |
 | 데이터베이스 | PostgreSQL 16 |
@@ -24,7 +24,7 @@ NestJS와 PostgreSQL을 사용하여 회원가입, 로그인, 게시글 작성·
 | 환경 변수 검증 | @nestjs/config, Joi |
 | 컨테이너 | Docker, Docker Compose |
 
-Node.js와 PostgreSQL 버전은 저장소의 Docker 설정을 기준으로 작성했습니다. 패키지의 버전 범위는 [package.json](package.json), 고정된 의존성 정보는 [package-lock.json](package-lock.json)에서 확인할 수 있습니다.
+Node.js와 PostgreSQL 버전은 저장소의 Docker 설정을 기준으로 작성했습니다. CI와 배포 이미지 준비 과정은 [컨테이너·CI 가이드](docs/container-ci.md)에 기록하며, GitHub Actions 및 K3s 실제 운영 배포 성공 여부는 별도 검증합니다. 패키지의 버전 범위는 [package.json](package.json), 고정된 의존성 정보는 [package-lock.json](package-lock.json)에서 확인할 수 있습니다.
 
 ## 구현한 기능
 
@@ -61,7 +61,7 @@ Node.js와 PostgreSQL 버전은 저장소의 Docker 설정을 기준으로 작�
 
 ## 로컬 실행 방법
 
-아래 명령은 Bash 기준이며, 저장소 루트에서 실행합니다. Node.js 22와 npm, PostgreSQL 16이 필요합니다. PostgreSQL을 Docker로 실행하려면 Docker도 준비되어 있어야 합니다.
+아래 명령은 Bash 기준이며, 저장소 루트에서 실행합니다. 검증 대상 환경은 Node.js 24와 npm, PostgreSQL 16입니다. PostgreSQL을 Docker로 실행하려면 Docker도 준비되어 있어야 합니다.
 
 ### 1. 저장소와 의존성 준비
 
