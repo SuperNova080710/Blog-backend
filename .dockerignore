@@ -1,16 +1,29 @@
+# Dependencies, build output and local caches
 node_modules
 dist
+coverage
+.nyc_output
+*.log
+npm-debug.log*
 
+# Repository and local editor files
 .git
-.gitignore
 .github
+.gitignore
+.vscode
+.idea
+.DS_Store
 
+# Local environment and credentials
 .env
 .env.*
 !.env.example
+*.pem
+*.key
+*.p12
 
-*.log
-
-.DS_Store
-
+# Never send local database files / volumes to the Docker build context
+docker/data
+docker/data/**
 Blog-DB/postgres_data
+**/postgres_data
