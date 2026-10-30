@@ -1,6 +1,6 @@
 # 백엔드 컨테이너·CI/CD 준비 및 검증 기록 (#23 / #30)
 
-> 2026-10-30 · 상태: 코드/워크플로 작성, **실제 GitHub Actions 및 GHCR 게시 결과 확인 전**  
+> 2026-10-30 · 상태: 코드/워크플로 작성, **실제 GitHub Actions 및 GHCR 게시 결과 확인 전**
 > 연계: [2차 네트워크 프로젝트 #23](https://github.com/SuperNova080710/2nd-project-docs/issues/23) · [#30](https://github.com/SuperNova080710/2nd-project-docs/issues/30)
 
 ## 1. 구성 개요
