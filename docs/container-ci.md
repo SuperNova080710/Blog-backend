@@ -1,6 +1,6 @@
 # 백엔드 컨테이너·CI/CD 준비 및 검증 기록 (#23 / #30)
 
-> 2026-10-30 · 상태: CI 작성, **프로덕션 npm audit 7건(Critical 1)으로 첫 CI FAIL**. 보안 개선 후 재검증 필요; GHCR 미게시·K3s 미배포
+> 2026-10-30 · 상태: **CI NestJS 빌드 및 Docker+임시 PostgreSQL HTTP 스모크 PASS**. 프로덕션 보안 감사 7건(Critical 1) **FAIL**로 GHCR 게시 차단; K3s 미배포
 > 연계: [2차 네트워크 프로젝트 #23](https://github.com/SuperNova080710/2nd-project-docs/issues/23) · [#30](https://github.com/SuperNova080710/2nd-project-docs/issues/30)
 
 ## 1. 구성 개요
@@ -49,15 +49,16 @@
 - [x] 기존 Dockerfile의 비권한 실행 미설정·빌드/실행 단계·파일 복사 구조 점검
 - [x] `.dockerignore`의 `docker/data` 누락 및 환경값 제외 규칙 확인·보완
 - [x] CI 품질 검사·임시 PostgreSQL 스모크 및 `main` GHCR 게시 **코드 작성**
-- [x] 첫 GitHub Actions 실행에서 프로덕션 감사 실패 확인: [Run 41024482260](https://github.com/SuperNova080710/Blog-backend/actions/runs/41024482260)
-- [ ] GitHub Actions `quality`, `security`, `container-smoke` **모두 실제 PASS**
+- [x] [GitHub Actions Run 41024783916](https://github.com/SuperNova080710/Blog-backend/actions/runs/41024783916)에서 `quality`(NestJS build) **PASS**, `container-smoke`(Docker 이미지 빌드, 임시 PostgreSQL 연결·HTTP) **PASS**
+- [x] 같은 실행에서 `security` prod·전체 감사 **FAIL** 확인; PR 이벤트에서는 GHCR publish **skipped**
+- [ ] GitHub Actions `quality`, `security`, `container-smoke` **세 Job 모두 PASS** 후 GHCR 게시 시험
 - [ ] 프로덕션 취약점 7건(Critical 1/High 5/Moderate 1) 해결 및 전체 감사 0건 확인 ([보안 이슈 #31](../issues/31))
 - [ ] 이미지 내부 의도치 않은 환경변수·비밀정보 여부 전수 검사
 - [ ] GHCR 실제 push 후 digest 및 접근권한 검증
 - [ ] 프로젝트 전용 DB 마이그레이션·인증/게시글 통합 검증
 - [ ] K3s/Flannel/UFW·Ingress/WAF 안전 승인 후 CD 연결
 
-**현재 판정:** CI SECURITY FAIL(원인 확인) / BACKEND BUILD & CONTAINER RE-TEST PENDING / GHCR PUBLISH BLOCKED / K3S DEPLOYMENT BLOCKED.
+**현재 판정:** BUILD PASS / ISOLATED POSTGRES CONTAINER SMOKE PASS / SECURITY FAIL (7건: Critical 1) / GHCR PUBLISH BLOCKED / K3S DEPLOYMENT BLOCKED.
 
 ## 5. 운영 서버 보호
 
