@@ -16,7 +16,29 @@ concurrency:
 
 jobs:
   quality:
-    name: Dependency audit and NestJS build
+    name: NestJS build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Compile NestJS
+        run: npm run build
+
+  security:
+    name: Dependency security audit
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -38,13 +60,8 @@ jobs:
         run: npm audit --omit=dev --audit-level=high
 
       - name: Audit all dependencies
+        if: success() || failure()
         run: npm audit --audit-level=high
-
-      - name: Compile NestJS
-        run: npm run build
-
-      # package.json currently has a placeholder npm test command.
-      # Do not claim unit tests ran until real tests are implemented.
 
   container-smoke:
     name: Build and test backend with ephemeral PostgreSQL
@@ -117,7 +134,7 @@ jobs:
   publish-ghcr:
     name: Publish reviewed main image to GHCR
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [quality, container-smoke]
+    needs: [quality, security, container-smoke]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
